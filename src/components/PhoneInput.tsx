@@ -15,7 +15,12 @@ const PhoneInput: React.FC = () => {
 
   return (
     <div className="relative w-full max-w-md mx-auto">
-      <div className={`absolute inset-0 bg-primary/5 rounded-lg transform transition-all duration-300 ${isFocused ? 'scale-105 opacity-100' : 'scale-100 opacity-0'}`}></div>
+      {/* Background effect div - moved to be BEHIND the input with pointer-events-none */}
+      <div 
+        className={`absolute inset-0 bg-primary/5 rounded-lg transform transition-all duration-300 pointer-events-none ${
+          isFocused ? 'scale-105 opacity-100' : 'scale-100 opacity-0'
+        }`}
+      ></div>
       
       <label 
         htmlFor="phone-input" 
@@ -24,19 +29,22 @@ const PhoneInput: React.FC = () => {
         Phone Number
       </label>
       
-      <Input
-        id="phone-input"
-        type="tel"
-        className="text-xl tracking-wider font-feature-settings-tabular animate-slide-up"
-        placeholder="Enter phone number"
-        value={phoneNumber}
-        onChange={handlePhoneChange}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
-        aria-label="Enter phone number"
-        maxLength={16}
-        autoComplete="tel"
-      />
+      {/* Making sure the input has position relative and proper z-index to be interactive */}
+      <div className="relative z-10">
+        <Input
+          id="phone-input"
+          type="tel"
+          className="text-xl tracking-wider relative z-10"
+          placeholder="Enter phone number"
+          value={phoneNumber}
+          onChange={handlePhoneChange}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          aria-label="Enter phone number"
+          maxLength={16}
+          autoComplete="tel"
+        />
+      </div>
       
       <p className="text-xs text-muted-foreground mt-2 ml-1 animate-fade-in">
         Enter 10 digits (4039995825) or 11 digits with country code (14039995825)
