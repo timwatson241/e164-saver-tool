@@ -1,6 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { usePhone } from '../context/PhoneContext';
+import { Input } from "@/components/ui/input";
 
 const PhoneInput: React.FC = () => {
   const { phoneNumber, setPhoneNumber } = usePhone();
@@ -23,10 +24,10 @@ const PhoneInput: React.FC = () => {
         Phone Number
       </label>
       
-      <input
+      <Input
         id="phone-input"
         type="tel"
-        className="phone-input animate-slide-up"
+        className="text-xl tracking-wider font-feature-settings-tabular animate-slide-up"
         placeholder="Enter phone number"
         value={phoneNumber}
         onChange={handlePhoneChange}
