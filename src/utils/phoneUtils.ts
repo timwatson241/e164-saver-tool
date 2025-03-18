@@ -7,6 +7,18 @@
  */
 
 /**
+ * Default configuration for phone utility functions
+ */
+export const phoneConfig = {
+  // Default country code (North America)
+  defaultCountryCode: '1',
+  
+  // Number of digits in a phone number without country code
+  // This is typically 10 for North America
+  nationalNumberLength: 10
+};
+
+/**
  * Formats a phone number to E.164 format
  * E.164 is the international standard format for phone numbers:
  * - Always starts with a + sign
@@ -14,20 +26,22 @@
  * - Then the national number with no spaces, hyphens, or other separators
  * 
  * @param phoneNumber The phone number to format (can include non-numeric characters)
+ * @param countryCode Optional country code to use (defaults to configuration value)
  * @returns The formatted phone number in E.164 format (e.g., +14039995825)
  */
-export const formatToE164 = (phoneNumber: string): string => {
+export const formatToE164 = (phoneNumber: string, countryCode: string = phoneConfig.defaultCountryCode): string => {
   // Strip all non-numeric characters (spaces, hyphens, parentheses, etc.)
   const digits = phoneNumber.replace(/\D/g, '');
   
   // Handle different input cases:
-  if (digits.length === 10) {
-    // CASE 1: If it's a 10-digit number (without country code)
+  if (digits.length === phoneConfig.nationalNumberLength) {
+    // CASE 1: If it's a standard national number (without country code)
     // Examples: 4039995825, 403-999-5825, (403) 999-5825
-    // Add +1 (North American country code) to the front
-    return `+1${digits}`;
-  } else if (digits.length === 11 && digits.startsWith('1')) {
-    // CASE 2: If it's an 11-digit number starting with 1
+    // Add the country code to the front
+    return `+${countryCode}${digits}`;
+  } else if (digits.length === phoneConfig.nationalNumberLength + countryCode.length && 
+             digits.startsWith(countryCode)) {
+    // CASE 2: If it already has the country code
     // Examples: 14039995825, 1-403-999-5825, 1 (403) 999-5825
     // Add + to the front to make it E.164 compliant
     return `+${digits}`;
@@ -43,20 +57,26 @@ export const formatToE164 = (phoneNumber: string): string => {
  * Validates if a phone number is in a valid format
  * 
  * For this application, we consider two formats valid:
- * 1. 10 digits (standard North American number without country code)
- * 2. 11 digits starting with 1 (North American number with country code)
+ * 1. Standard national number length (typically 10 digits for North America)
+ * 2. National number length + country code digits (typically 11 digits for North America)
  * 
  * @param phoneNumber The phone number to validate (can include non-numeric characters)
+ * @param countryCode Optional country code to use (defaults to configuration value)
  * @returns Boolean indicating if the phone number is valid
  */
-export const isValidPhoneNumber = (phoneNumber: string): boolean => {
+export const isValidPhoneNumber = (
+  phoneNumber: string, 
+  countryCode: string = phoneConfig.defaultCountryCode
+): boolean => {
   // Strip all non-numeric characters for validation
   const digits = phoneNumber.replace(/\D/g, '');
   
   // Valid formats: 
-  // - 10 digits (without country code), e.g., 4039995825
-  // - 11 digits starting with 1 (with country code), e.g., 14039995825
-  return (digits.length === 10) || (digits.length === 11 && digits.startsWith('1'));
+  // - National number length (without country code)
+  // - National number length + country code length (with country code)
+  return (digits.length === phoneConfig.nationalNumberLength) || 
+         (digits.length === phoneConfig.nationalNumberLength + countryCode.length && 
+          digits.startsWith(countryCode));
 };
 
 /**
@@ -66,9 +86,13 @@ export const isValidPhoneNumber = (phoneNumber: string): boolean => {
  * with appropriate spacing, parentheses, and hyphens.
  * 
  * @param phoneNumber The E.164 formatted phone number to display (e.g., +14039995825)
+ * @param countryCode Optional country code to use (defaults to configuration value)
  * @returns Formatted phone number for display (e.g., +1 (403) 999-5825)
  */
-export const formatForDisplay = (phoneNumber: string): string => {
+export const formatForDisplay = (
+  phoneNumber: string, 
+  countryCode: string = phoneConfig.defaultCountryCode
+): string => {
   // Handle empty or very short input
   if (!phoneNumber || phoneNumber.length < 2) return phoneNumber;
   
@@ -77,13 +101,25 @@ export const formatForDisplay = (phoneNumber: string): string => {
   // Strip all non-numeric characters
   const digits = withoutPlus.replace(/\D/g, '');
   
-  // Format North American numbers (country code 1) with a standard format:
-  // +1 (XXX) XXX-XXXX
-  if (digits.length === 11 && digits.startsWith('1')) {
-    return `+1 (${digits.substring(1, 4)}) ${digits.substring(4, 7)}-${digits.substring(7)}`;
+  // Format North American numbers (or any number matching our expected pattern)
+  // with a standard format: +[country code] (XXX) XXX-XXXX
+  if (digits.length === phoneConfig.nationalNumberLength + countryCode.length && 
+      digits.startsWith(countryCode)) {
+    
+    // Get the national number part (after country code)
+    const nationalNumber = digits.substring(countryCode.length);
+    
+    // For North American numbers, format as: +1 (XXX) XXX-XXXX
+    if (countryCode === '1' && nationalNumber.length === 10) {
+      return `+${countryCode} (${nationalNumber.substring(0, 3)}) ${nationalNumber.substring(3, 6)}-${nationalNumber.substring(6)}`;
+    }
+    
+    // For other countries, use a simpler format: +[country code] XXXXXXXXXX
+    return `+${countryCode} ${nationalNumber}`;
   }
   
   // For any other format, return as is
   // This handles international numbers or non-standard formats
   return phoneNumber;
 };
+
